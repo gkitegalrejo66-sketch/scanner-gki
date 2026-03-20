@@ -156,6 +156,22 @@
     .upload-box p { font-size:13px; color:var(--muted); }
     .upload-box input { display:none; }
     #uploadPreview { width:100%; border-radius:8px; display:none; margin-top:10px; }
+
+    /* Hasil pencarian manual */
+    .hasil-item {
+      display:flex; align-items:center; gap:10px;
+      padding:10px 12px; border-radius:9px; margin-bottom:6px;
+      background:var(--surface2); border:1px solid var(--border);
+      cursor:pointer; transition:border-color .15s; -webkit-tap-highlight-color:transparent;
+    }
+    .hasil-item:active { border-color:var(--gold); background:rgba(245,197,24,.06); }
+    .hasil-av { width:32px; height:32px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--navy),#004b99); display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:var(--gold); }
+    .hasil-info { flex:1; min-width:0; }
+    .hasil-nama { font-size:13px; font-weight:600; }
+    .hasil-sub  { font-size:11px; color:var(--muted); margin-top:2px; }
+    .hasil-plus { color:var(--gold); font-size:18px; flex-shrink:0; }
+    .cari-loading { text-align:center; padding:16px; color:var(--muted); font-size:13px; }
+    .cari-empty   { text-align:center; padding:16px; color:var(--muted); font-size:13px; }
   </style>
 </head>
 <body>
@@ -265,11 +281,12 @@
 
     <!-- Tab 2 -->
     <div class="tab-pane" id="tabPane2" style="display:none;">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Ketik NIA jemaat lalu tekan Cari atau Enter.</p>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Cari berdasarkan NIA atau Nama jemaat.</p>
       <div class="manual-row">
-        <input type="text" id="manualNia" placeholder="Ketik NIA..." onkeydown="if(event.key==='Enter')cariManual()">
-        <button class="mbtn" onclick="cariManual()"><i class="fas fa-search"></i></button>
+        <input type="text" id="manualNia" placeholder="Ketik NIA atau nama..." oninput="cariJemaat(this.value)" onkeydown="if(event.key==='Enter')paksaCariBaris()">
+        <button class="mbtn" onclick="paksaCariBaris()"><i class="fas fa-search"></i></button>
       </div>
+      <div id="hasilCari" style="margin-top:8px;"></div>
     </div>
 
     <!-- Tab 3 -->
@@ -437,14 +454,61 @@ function scanDariFoto(input) {
   fr.readAsDataURL(input.files[0]);
 }
 
-// ── MANUAL ───────────────────────────────────
-function cariManual() {
-  const v=document.getElementById('manualNia').value.trim();
-  if(!v) return;
-  const dup=daftarHadir.find(x=>x.nia===v);
-  if(dup){toast('dup',v,dup.nama,dup.wilayah+' · Sudah: '+dup.waktu);beep('dup');}
-  else   {daftarHadir.unshift({nia:v,nama:'(Manual)',wilayah:'-',waktu:jam()});renderList();toast('ok',v,'(Manual)','-');beep('ok');}
-  document.getElementById('manualNia').value='';
+// ── MANUAL — cari ke spreadsheet ─────────────
+let cariTimer = null;
+
+function cariJemaat(q) {
+  clearTimeout(cariTimer);
+  const el = document.getElementById('hasilCari');
+  q = q.trim();
+  if (q.length < 2) { el.innerHTML = ''; return; }
+  el.innerHTML = '<div class="cari-loading"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
+  cariTimer = setTimeout(() => fetchCari(q), 400);
+}
+
+function paksaCariBaris() {
+  const q = document.getElementById('manualNia').value.trim();
+  if (q) fetchCari(q);
+}
+
+async function fetchCari(q) {
+  const el = document.getElementById('hasilCari');
+  try {
+    const res  = await fetch(APPS_SCRIPT_URL + '?action=cari&q=' + encodeURIComponent(q));
+    const data = await res.json();
+    if (!data.length) {
+      el.innerHTML = '<div class="cari-empty"><i class="fas fa-search" style="display:block;font-size:20px;margin-bottom:6px;opacity:.3;"></i>Jemaat tidak ditemukan</div>';
+      return;
+    }
+    el.innerHTML = data.map(x => {
+      const ini = x.nama.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
+      return `<div class="hasil-item" onclick="pilihJemaat('${x.nia}','${x.nama.replace(/'/g,"\\'")}','${x.wilayah.replace(/'/g,"\\'")}')">
+        <div class="hasil-av">${ini}</div>
+        <div class="hasil-info">
+          <div class="hasil-nama">${x.nama}</div>
+          <div class="hasil-sub">NIA: ${x.nia} &nbsp;·&nbsp; ${x.wilayah}</div>
+        </div>
+        <div class="hasil-plus"><i class="fas fa-plus-circle"></i></div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Gagal mengambil data. Cek koneksi internet.</div>';
+  }
+}
+
+function pilihJemaat(nia, nama, wilayah) {
+  const dup = daftarHadir.find(x => x.nia === nia);
+  if (dup) {
+    toast('dup', nia, nama, wilayah + ' · Sudah scan: ' + dup.waktu);
+    beep('dup');
+  } else {
+    daftarHadir.unshift({ nia, nama, wilayah, waktu: jam() });
+    renderList();
+    toast('ok', nia, nama, wilayah);
+    beep('ok');
+  }
+  document.getElementById('manualNia').value = '';
+  document.getElementById('hasilCari').innerHTML = '';
   switchTab(1);
 }
 
