@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
   <title>Scanner Kehadiran | GKI Tegalrejo</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.4/css/all.min.css">
@@ -11,232 +11,156 @@
     :root {
       --navy:#003366; --gold:#f5c518; --bg:#0a0f1e;
       --surface:#111827; --surface2:#1a2236;
-      --border:rgba(255,255,255,0.09); --text:#f0f4ff;
-      --muted:#8899bb; --green:#22c55e; --red:#ef4444;
-      --r:12px;
+      --border:rgba(255,255,255,0.09);
+      --text:#f0f4ff; --muted:#8899bb;
+      --green:#22c55e; --red:#ef4444;
     }
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;}
+    * { box-sizing:border-box; margin:0; padding:0; }
+    html, body { height:100%; font-family:'DM Sans',sans-serif; background:var(--bg); color:var(--text); }
 
-    /* ── SETUP SCREEN ── */
-    #setupScreen{
-      min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
-      background:radial-gradient(ellipse 80% 50% at 20% 0%,rgba(0,51,102,.5) 0%,transparent 60%);
+    /* SETUP SCREEN */
+    #setupScreen {
+      min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px;
+      background:radial-gradient(ellipse 80% 50% at 20% 0%, rgba(0,51,102,.5) 0%, transparent 60%);
     }
-    .setup-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px 28px;width:100%;max-width:420px;}
-    .setup-logo{text-align:center;margin-bottom:24px;}
-    .setup-logo img{width:52px;filter:drop-shadow(0 0 8px rgba(245,197,24,.35));}
-    .setup-logo h1{font-size:18px;font-weight:700;margin-top:10px;}
-    .setup-logo p{font-size:12px;color:var(--muted);margin-top:3px;}
-    .field{margin-bottom:16px;}
-    .field label{display:block;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;}
-    .field input,.field select{
-      width:100%;background:var(--surface2);border:1px solid var(--border);
-      border-radius:9px;color:var(--text);font-family:'DM Sans',sans-serif;
-      font-size:14px;padding:10px 14px;outline:none;transition:border-color .2s;
+    .setup-card { background:var(--surface); border:1px solid var(--border); border-radius:20px; padding:28px 24px; width:100%; max-width:400px; }
+    .setup-logo { text-align:center; margin-bottom:20px; }
+    .setup-logo img { width:48px; filter:drop-shadow(0 0 8px rgba(245,197,24,.35)); }
+    .setup-logo h1 { font-size:17px; font-weight:700; margin-top:8px; }
+    .setup-logo p  { font-size:12px; color:var(--muted); margin-top:2px; }
+    .field { margin-bottom:14px; }
+    .field label { display:block; font-size:11px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:.6px; margin-bottom:5px; }
+    .field input, .field select {
+      width:100%; background:var(--surface2); border:1px solid var(--border);
+      border-radius:9px; color:var(--text); font-family:'DM Sans',sans-serif;
+      font-size:14px; padding:10px 13px; outline:none; transition:border-color .2s;
+      -webkit-appearance:none; appearance:none;
     }
-    .field input:focus,.field select:focus{border-color:var(--gold);}
-    .field select option{background:#1a2236;}
-    .btn-start{
-      width:100%;background:var(--gold);color:#111;font-family:'DM Sans',sans-serif;
-      font-weight:700;font-size:15px;padding:13px;border-radius:10px;border:none;
-      cursor:pointer;transition:all .18s;margin-top:8px;
-    }
-    .btn-start:hover{background:#ffd94a;transform:translateY(-1px);}
-
-    /* ── SCANNER SCREEN ── */
-    #scanScreen{display:none;flex-direction:column;height:100vh;overflow:hidden;}
-
-    /* Header */
-    .scan-header{
-      background:rgba(17,24,39,.95);backdrop-filter:blur(10px);
-      border-bottom:1px solid var(--border);padding:10px 16px;
-      display:flex;align-items:center;gap:10px;flex-shrink:0;
-    }
-    .scan-header img{width:28px;}
-    .scan-header .hinfo{flex:1;}
-    .scan-header .hinfo .htitle{font-size:13px;font-weight:700;}
-    .scan-header .hinfo .hsub{font-size:11px;color:var(--muted);}
-    .badge-live{display:flex;align-items:center;gap:5px;background:rgba(34,197,94,.15);
-      border:1px solid rgba(34,197,94,.3);color:var(--green);font-size:10px;font-weight:700;
-      padding:3px 10px;border-radius:99px;}
-    .badge-live .dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 1.5s infinite;}
-    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.8)}}
-
-    /* Main layout: video atas, list bawah */
-    .scan-body{flex:1;display:flex;flex-direction:column;overflow:hidden;}
-
-    /* VIDEO AREA */
-    .video-wrap{position:relative;flex-shrink:0;background:#000;height:260px;}
-    #camVideo{width:100%;height:100%;object-fit:cover;display:block;}
-    #camCanvas{display:none;}
-    .cam-overlay{
-      position:absolute;inset:0;pointer-events:none;
-      display:flex;align-items:center;justify-content:center;
-    }
-    /* Corner frame */
-    .qr-frame{position:relative;width:160px;height:160px;}
-    .qr-frame::before,.qr-frame::after,
-    .qr-frame span::before,.qr-frame span::after{
-      content:'';position:absolute;width:22px;height:22px;border-color:var(--gold);border-style:solid;
-    }
-    .qr-frame::before{top:0;left:0;border-width:3px 0 0 3px;}
-    .qr-frame::after{top:0;right:0;border-width:3px 3px 0 0;}
-    .qr-frame span::before{bottom:0;left:0;border-width:0 0 3px 3px;}
-    .qr-frame span::after{bottom:0;right:0;border-width:0 3px 3px 0;}
-    /* Scan line */
-    .scan-line{
-      position:absolute;left:0;right:0;height:2px;
-      background:linear-gradient(90deg,transparent,var(--gold),transparent);
-      animation:scanmove 2s ease-in-out infinite;
-    }
-    @keyframes scanmove{0%{top:20%;opacity:0}10%{opacity:1}90%{opacity:1}100%{top:80%;opacity:0}}
-
-    /* Cam status bar */
-    .cam-status-bar{
-      position:absolute;bottom:0;left:0;right:0;
-      background:rgba(0,0,0,.6);backdrop-filter:blur(4px);
-      padding:6px 14px;display:flex;align-items:center;justify-content:space-between;
-    }
-    #camStatusTxt{font-size:11px;color:var(--muted);}
-    .cam-btns{display:flex;gap:6px;}
-    .cbtn{
-      background:rgba(255,255,255,.1);border:1px solid var(--border);
-      color:var(--text);font-family:'DM Sans',sans-serif;font-size:11px;
-      padding:4px 10px;border-radius:6px;cursor:pointer;transition:all .15s;
-    }
-    .cbtn:hover{background:rgba(255,255,255,.2);}
-    .cbtn.gold{background:var(--gold);color:#111;border-color:var(--gold);font-weight:700;}
-    .cbtn:disabled{opacity:.4;cursor:not-allowed;}
-
-    /* ERROR / Info kamera */
-    #camError{
-      position:absolute;inset:0;background:rgba(10,15,30,.92);
-      display:none;align-items:center;justify-content:center;padding:20px;text-align:center;
-    }
-    #camError .err-icon{font-size:36px;color:var(--red);margin-bottom:12px;}
-    #camError h3{font-size:15px;font-weight:700;margin-bottom:8px;}
-    #camError p{font-size:12px;color:var(--muted);line-height:1.6;margin-bottom:14px;}
-    #camError .err-btns{display:flex;flex-direction:column;gap:8px;width:100%;}
-
-    /* RESULT TOAST */
-    #resultToast{
-      position:absolute;top:10px;left:50%;transform:translateX(-50%);
-      min-width:260px;max-width:90%;
-      background:rgba(17,24,39,.97);border:1px solid var(--border);
-      border-radius:12px;padding:12px 16px;
-      opacity:0;transition:opacity .3s;pointer-events:none;z-index:10;
-    }
-    #resultToast.show{opacity:1;}
-    #resultToast.ok{border-color:rgba(34,197,94,.4);}
-    #resultToast.dup{border-color:rgba(245,197,24,.4);}
-    #resultToast.err{border-color:rgba(239,68,68,.4);}
-    .toast-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px;}
-    .toast-label.ok{color:var(--green);}
-    .toast-label.dup{color:var(--gold);}
-    .toast-label.err{color:var(--red);}
-    .toast-nia{font-family:'DM Mono',monospace;font-size:16px;color:var(--gold);}
-    .toast-nama{font-size:14px;font-weight:700;}
-    .toast-wil{font-size:11px;color:var(--muted);margin-top:2px;}
-
-    /* PANEL BAWAH */
-    .bottom-panel{flex:1;display:flex;flex-direction:column;overflow:hidden;background:var(--surface);}
-
-    /* Tab bar -->*/
-    .tab-bar{display:flex;border-bottom:1px solid var(--border);flex-shrink:0;}
-    .tab-btn{
-      flex:1;padding:10px;background:none;border:none;color:var(--muted);
-      font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;
-      border-bottom:2px solid transparent;transition:all .2s;
-    }
-    .tab-btn.active{color:var(--gold);border-bottom-color:var(--gold);}
-
-    /* Tab konten */
-    .tab-content{flex:1;overflow-y:auto;padding:12px 14px;}
-    .tab-content::-webkit-scrollbar{width:3px;}
-    .tab-content::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-
-    /* Counter */
-    .counter-row{display:flex;align-items:baseline;gap:8px;margin-bottom:10px;}
-    .counter-num{font-family:'DM Mono',monospace;font-size:32px;color:var(--gold);line-height:1;}
-    .counter-lbl{font-size:12px;color:var(--muted);}
-
-    /* Search */
-    .search-box{
-      width:100%;background:var(--surface2);border:1px solid var(--border);
-      border-radius:8px;color:var(--text);font-family:'DM Sans',sans-serif;
-      font-size:13px;padding:8px 12px;outline:none;margin-bottom:10px;
-    }
-    .search-box:focus{border-color:var(--gold);}
-
-    /* Hadir item */
-    .hadir-item{
-      display:flex;align-items:center;gap:10px;padding:9px 0;
-      border-bottom:1px solid var(--border);animation:slideIn .25s ease;
-    }
-    @keyframes slideIn{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-    .hadir-item:last-child{border-bottom:none;}
-    .hadir-no{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);width:22px;text-align:right;flex-shrink:0;}
-    .hadir-av{
-      width:30px;height:30px;border-radius:50%;flex-shrink:0;
-      background:linear-gradient(135deg,var(--navy),#004b99);
-      display:flex;align-items:center;justify-content:center;
-      font-size:11px;font-weight:700;color:var(--gold);
-    }
-    .hadir-info{flex:1;min-width:0;}
-    .hadir-nama{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-    .hadir-sub{font-size:11px;color:var(--muted);margin-top:1px;}
-    .hadir-time{font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);flex-shrink:0;}
-    .hadir-del{background:none;border:none;color:var(--muted);cursor:pointer;padding:4px;font-size:11px;flex-shrink:0;}
-    .hadir-del:hover{color:var(--red);}
-    .empty-state{text-align:center;padding:30px 10px;color:var(--muted);font-size:13px;}
-    .empty-state i{font-size:26px;display:block;margin-bottom:8px;opacity:.3;}
-
-    /* Manual input tab */
-    .manual-wrap{padding:4px 0;}
-    .manual-row{display:flex;gap:8px;margin-bottom:16px;}
-    .manual-row input{
-      flex:1;background:var(--surface2);border:1px solid var(--border);
-      border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;
-      font-size:14px;padding:10px 12px;outline:none;
-    }
-    .manual-row input:focus{border-color:var(--gold);}
-    .mbtn{
-      background:var(--navy);border:1px solid rgba(255,255,255,.1);color:#fff;
-      font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;
-      padding:10px 16px;border-radius:8px;cursor:pointer;
+    .field input:focus, .field select:focus { border-color:var(--gold); }
+    .field select option { background:#1a2236; }
+    .btn-start {
+      width:100%; background:var(--gold); color:#111; font-family:'DM Sans',sans-serif;
+      font-weight:700; font-size:15px; padding:13px; border-radius:10px; border:none;
+      cursor:pointer; margin-top:6px; -webkit-tap-highlight-color:transparent;
     }
 
-    /* Toolbar ekspor */
-    .toolbar{display:flex;gap:8px;flex-wrap:wrap;padding-top:12px;border-top:1px solid var(--border);}
-    .tbtn{
-      flex:1;min-width:80px;background:var(--surface2);border:1px solid var(--border);
-      color:var(--text);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;
-      padding:9px 6px;border-radius:8px;cursor:pointer;text-align:center;transition:all .15s;
+    /* SCAN SCREEN */
+    #scanScreen { display:none; flex-direction:column; height:100vh; height:100dvh; }
+
+    .scan-header {
+      background:rgba(17,24,39,.97); border-bottom:1px solid var(--border);
+      padding:8px 14px; display:flex; align-items:center; gap:10px; flex-shrink:0;
     }
-    .tbtn:hover{border-color:var(--muted);}
-    .tbtn.gold{background:var(--gold);color:#111;border-color:var(--gold);}
-    .tbtn.gold:hover{background:#ffd94a;}
-    .tbtn.danger{background:rgba(239,68,68,.1);color:var(--red);border-color:rgba(239,68,68,.25);}
-    #simpanStatus{
-      display:none;margin-top:10px;padding:8px 12px;border-radius:8px;
-      font-size:12px;font-weight:600;
+    .scan-header img { width:26px; }
+    .hinfo { flex:1; overflow:hidden; }
+    .hinfo .htitle { font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hinfo .hsub   { font-size:10px; color:var(--muted); }
+    .badge-live { display:flex; align-items:center; gap:5px; background:rgba(34,197,94,.15); border:1px solid rgba(34,197,94,.3); color:var(--green); font-size:10px; font-weight:700; padding:3px 9px; border-radius:99px; flex-shrink:0; }
+    .badge-live .dot { width:6px; height:6px; border-radius:50%; background:var(--green); animation:pulse 1.5s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(.8)} }
+
+    /* Video */
+    .video-wrap { position:relative; flex-shrink:0; height:220px; background:#000; overflow:hidden; }
+    #camVideo   { width:100%; height:100%; object-fit:cover; display:block; }
+    #camCanvas  { display:none; }
+    .cam-overlay { position:absolute; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center; }
+    .qr-frame { position:relative; width:140px; height:140px; }
+    .qr-frame::before,.qr-frame::after,.qr-frame span::before,.qr-frame span::after { content:''; position:absolute; width:20px; height:20px; border-color:var(--gold); border-style:solid; }
+    .qr-frame::before  { top:0;    left:0;  border-width:3px 0 0 3px; }
+    .qr-frame::after   { top:0;    right:0; border-width:3px 3px 0 0; }
+    .qr-frame span::before { bottom:0; left:0;  border-width:0 0 3px 3px; }
+    .qr-frame span::after  { bottom:0; right:0; border-width:0 3px 3px 0; }
+    .scan-line { position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--gold),transparent); animation:scanmove 2s ease-in-out infinite; display:none; }
+    @keyframes scanmove { 0%{top:10%;opacity:0} 10%{opacity:1} 90%{opacity:1} 100%{top:90%;opacity:0} }
+    .cam-bar { position:absolute; bottom:0; left:0; right:0; background:rgba(0,0,0,.65); padding:5px 12px; display:flex; align-items:center; justify-content:space-between; }
+    #camStatusTxt { font-size:11px; color:var(--muted); }
+    .cam-btns { display:flex; gap:6px; }
+    .cbtn { background:rgba(255,255,255,.1); border:1px solid var(--border); color:var(--text); font-family:'DM Sans',sans-serif; font-size:11px; padding:4px 10px; border-radius:6px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .cbtn.gold { background:var(--gold); color:#111; border-color:var(--gold); font-weight:700; }
+
+    /* Toast */
+    #resultToast { position:absolute; top:8px; left:50%; transform:translateX(-50%); min-width:250px; max-width:88%; background:rgba(17,24,39,.97); border:1px solid var(--border); border-radius:12px; padding:10px 14px; opacity:0; transition:opacity .3s; pointer-events:none; z-index:20; }
+    #resultToast.show { opacity:1; }
+    #resultToast.ok  { border-color:rgba(34,197,94,.45); }
+    #resultToast.dup { border-color:rgba(245,197,24,.45); }
+    #resultToast.err { border-color:rgba(239,68,68,.45); }
+    .t-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.7px; margin-bottom:3px; }
+    .t-label.ok{color:var(--green);} .t-label.dup{color:var(--gold);} .t-label.err{color:var(--red);}
+    .t-nia  { font-family:'DM Mono',monospace; font-size:15px; color:var(--gold); }
+    .t-nama { font-size:13px; font-weight:700; }
+    .t-wil  { font-size:11px; color:var(--muted); margin-top:2px; }
+
+    /* Camera error overlay */
+    #camError { position:absolute; inset:0; background:rgba(10,15,30,.93); display:none; flex-direction:column; align-items:center; justify-content:center; padding:20px; text-align:center; z-index:10; }
+    #camError i  { font-size:32px; color:var(--red); margin-bottom:10px; }
+    #camError h3 { font-size:14px; font-weight:700; margin-bottom:6px; }
+    #camError p  { font-size:12px; color:var(--muted); line-height:1.6; margin-bottom:12px; }
+
+    /* BOTTOM PANEL */
+    .bottom-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--surface); min-height:0; }
+    .tab-bar { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
+    .tab-btn { flex:1; padding:9px 4px; background:none; border:none; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:11px; font-weight:600; cursor:pointer; border-bottom:2px solid transparent; transition:all .2s; -webkit-tap-highlight-color:transparent; }
+    .tab-btn.active { color:var(--gold); border-bottom-color:var(--gold); }
+
+    /* Tab pane — key fix: overflow-y:auto + flex:1 + min-height:0 */
+    .tab-pane { flex:1; overflow-y:auto; -webkit-overflow-scrolling:touch; padding:12px 14px 80px; min-height:0; }
+    .tab-pane::-webkit-scrollbar { width:3px; }
+    .tab-pane::-webkit-scrollbar-thumb { background:rgba(255,255,255,.1); border-radius:2px; }
+
+    .counter-row { display:flex; align-items:baseline; gap:8px; margin-bottom:10px; }
+    .counter-num { font-family:'DM Mono',monospace; font-size:30px; color:var(--gold); line-height:1; }
+    .counter-lbl { font-size:12px; color:var(--muted); }
+
+    .search-box { width:100%; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; padding:8px 11px; outline:none; margin-bottom:10px; }
+    .search-box:focus { border-color:var(--gold); }
+
+    .hadir-item { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); animation:slideIn .25s ease; }
+    @keyframes slideIn { from{opacity:0;transform:translateX(-5px)} to{opacity:1;transform:none} }
+    .hadir-item:last-child { border-bottom:none; }
+    .hi-no   { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); width:20px; text-align:right; flex-shrink:0; }
+    .hi-av   { width:28px; height:28px; border-radius:50%; flex-shrink:0; background:linear-gradient(135deg,var(--navy),#004b99); display:flex; align-items:center; justify-content:center; font-size:10px; font-weight:700; color:var(--gold); }
+    .hi-info { flex:1; min-width:0; }
+    .hi-nama { font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .hi-sub  { font-size:10px; color:var(--muted); margin-top:1px; }
+    .hi-time { font-family:'DM Mono',monospace; font-size:10px; color:var(--muted); flex-shrink:0; }
+    .hi-del  { background:none; border:none; color:var(--muted); cursor:pointer; padding:6px; font-size:12px; -webkit-tap-highlight-color:transparent; }
+    .hi-del:active { color:var(--red); }
+
+    .empty-state { text-align:center; padding:24px 10px; color:var(--muted); font-size:13px; }
+    .empty-state i { font-size:24px; display:block; margin-bottom:8px; opacity:.3; }
+
+    /* TOOLBAR — 2 kolom, selalu terlihat karena ada padding-bottom di tab-pane */
+    .toolbar { display:grid; grid-template-columns:1fr 1fr; gap:8px; padding-top:14px; margin-top:10px; border-top:1px solid var(--border); }
+    .tbtn {
+      background:var(--surface2); border:1px solid var(--border);
+      color:var(--text); font-family:'DM Sans',sans-serif; font-size:13px; font-weight:600;
+      padding:12px 8px; border-radius:9px; cursor:pointer; text-align:center;
+      -webkit-tap-highlight-color:transparent;
     }
-    .upload-fallback{
-      border:2px dashed var(--border);border-radius:10px;padding:24px 16px;
-      text-align:center;cursor:pointer;transition:border-color .2s;
-    }
-    .upload-fallback:hover{border-color:var(--gold);}
-    .upload-fallback i{font-size:28px;color:var(--muted);margin-bottom:8px;display:block;}
-    .upload-fallback p{font-size:13px;color:var(--muted);}
-    .upload-fallback input{display:none;}
+    .tbtn:active { background:rgba(255,255,255,.08); }
+    .tbtn.gold   { background:var(--gold); color:#111; border-color:var(--gold); }
+    .tbtn.gold:active { background:#ffd94a; }
+    .tbtn.danger { background:rgba(239,68,68,.1); color:var(--red); border-color:rgba(239,68,68,.25); }
+    .tbtn.danger:active { background:rgba(239,68,68,.2); }
+
+    #simpanStatus { display:none; margin-top:10px; padding:9px 12px; border-radius:8px; font-size:12px; font-weight:600; line-height:1.4; }
+
+    .manual-row { display:flex; gap:8px; margin-top:4px; }
+    .manual-row input { flex:1; background:var(--surface2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-family:'DM Mono',monospace; font-size:14px; padding:10px 12px; outline:none; }
+    .manual-row input:focus { border-color:var(--gold); }
+    .mbtn { background:var(--navy); border:1px solid rgba(255,255,255,.1); color:#fff; font-family:'DM Sans',sans-serif; font-weight:600; font-size:13px; padding:10px 14px; border-radius:8px; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+
+    .upload-box { border:2px dashed var(--border); border-radius:10px; padding:28px 16px; text-align:center; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+    .upload-box:active { border-color:var(--gold); }
+    .upload-box i { font-size:28px; color:var(--muted); margin-bottom:8px; display:block; }
+    .upload-box p { font-size:13px; color:var(--muted); }
+    .upload-box input { display:none; }
+    #uploadPreview { width:100%; border-radius:8px; display:none; margin-top:10px; }
   </style>
 </head>
 <body>
 
-<!-- ══════════════════════════════
-     SETUP SCREEN
-══════════════════════════════ -->
+<!-- SETUP SCREEN -->
 <div id="setupScreen">
   <div class="setup-card">
     <div class="setup-logo">
@@ -244,7 +168,6 @@
       <h1>Scanner Kehadiran</h1>
       <p>GKI Tegalrejo Salatiga</p>
     </div>
-
     <div class="field">
       <label>Jenis Ibadah</label>
       <select id="jenisIbadah">
@@ -270,545 +193,394 @@
       <label>Nama Petugas</label>
       <input type="text" id="petugas" placeholder="Nama petugas absensi...">
     </div>
-
-
     <button class="btn-start" onclick="mulaiSesi()">
-      <i class="fas fa-qrcode"></i> Mulai Sesi &amp; Buka Kamera
+      <i class="fas fa-qrcode"></i>&nbsp; Mulai Sesi &amp; Buka Kamera
     </button>
   </div>
 </div>
 
-<!-- ══════════════════════════════
-     SCAN SCREEN
-══════════════════════════════ -->
+<!-- SCAN SCREEN -->
 <div id="scanScreen">
 
-  <!-- Header -->
   <div class="scan-header">
     <img src="https://upload.wikimedia.org/wikipedia/id/3/39/Gereja_Kristen_Indonesia.png" alt="GKI">
     <div class="hinfo">
       <div class="htitle" id="hJenis">—</div>
-      <div class="hsub" id="hTgl">—</div>
+      <div class="hsub"   id="hTgl">—</div>
     </div>
     <div class="badge-live"><div class="dot"></div>LIVE</div>
     <button class="cbtn" style="margin-left:8px;" onclick="akhiriSesi()">Selesai</button>
   </div>
 
-  <div class="scan-body">
-
-    <!-- Video area -->
-    <div class="video-wrap">
-      <video id="camVideo" autoplay playsinline muted></video>
-      <canvas id="camCanvas"></canvas>
-
-      <!-- Overlay frame + scan line -->
-      <div class="cam-overlay">
-        <div class="qr-frame">
-          <span></span>
-          <div class="scan-line" id="scanLine" style="display:none;"></div>
-        </div>
+  <div class="video-wrap">
+    <video id="camVideo" autoplay playsinline muted></video>
+    <canvas id="camCanvas"></canvas>
+    <div class="cam-overlay">
+      <div class="qr-frame"><span></span><div class="scan-line" id="scanLine"></div></div>
+    </div>
+    <div id="resultToast">
+      <div class="t-label" id="tLabel"></div>
+      <div class="t-nia"   id="tNia"></div>
+      <div class="t-nama"  id="tNama"></div>
+      <div class="t-wil"   id="tWil"></div>
+    </div>
+    <div id="camError">
+      <i class="fas fa-video-slash"></i>
+      <h3>Kamera tidak dapat diakses</h3>
+      <p id="errMsg"></p>
+      <button class="cbtn gold" onclick="retryCamera()"><i class="fas fa-redo"></i> Coba Lagi</button>
+    </div>
+    <div class="cam-bar">
+      <span id="camStatusTxt">Memulai...</span>
+      <div class="cam-btns">
+        <button class="cbtn" id="btnPause"  onclick="pauseScanner()"><i class="fas fa-pause"></i> Pause</button>
+        <button class="cbtn gold" id="btnResume" onclick="startCamera()" style="display:none;"><i class="fas fa-play"></i> Lanjut</button>
       </div>
+    </div>
+  </div>
 
-      <!-- Result toast -->
-      <div id="resultToast">
-        <div class="toast-label" id="toastLabel"></div>
-        <div class="toast-nia" id="toastNia"></div>
-        <div class="toast-nama" id="toastNama"></div>
-        <div class="toast-wil" id="toastWil"></div>
+  <div class="bottom-panel">
+    <div class="tab-bar">
+      <button class="tab-btn active" id="tab1" onclick="switchTab(1)"><i class="fas fa-list"></i> Hadir (<span id="counterInTab">0</span>)</button>
+      <button class="tab-btn" id="tab2" onclick="switchTab(2)"><i class="fas fa-keyboard"></i> Manual</button>
+      <button class="tab-btn" id="tab3" onclick="switchTab(3)"><i class="fas fa-image"></i> Foto QR</button>
+    </div>
+
+    <!-- Tab 1 -->
+    <div class="tab-pane" id="tabPane1">
+      <div class="counter-row">
+        <div class="counter-num" id="counterNum">0</div>
+        <div class="counter-lbl">jemaat hadir</div>
       </div>
-
-      <!-- Error overlay -->
-      <div id="camError">
-        <div>
-          <div class="err-icon"><i class="fas fa-video-slash"></i></div>
-          <h3>Kamera tidak dapat diakses</h3>
-          <p id="errMsg">Izin kamera ditolak atau tidak tersedia.</p>
-          <div class="err-btns">
-            <button class="cbtn gold" onclick="retryCamera()"><i class="fas fa-redo"></i> Coba Lagi</button>
-          </div>
-        </div>
+      <input type="text" class="search-box" id="searchBox" placeholder="Cari nama atau NIA..." oninput="renderList()">
+      <div id="hadirList"><div class="empty-state"><i class="fas fa-users"></i>Belum ada kehadiran</div></div>
+      <div class="toolbar">
+        <button class="tbtn gold"   onclick="simpanKeSheet()"><i class="fas fa-save"></i> Simpan ke Sheet</button>
+        <button class="tbtn"        onclick="exportCSV()"><i class="fas fa-file-csv"></i> Download CSV</button>
+        <button class="tbtn"        onclick="exportTXT()"><i class="fas fa-file-alt"></i> Download TXT</button>
+        <button class="tbtn danger" onclick="clearAll()"><i class="fas fa-trash"></i> Hapus Semua</button>
       </div>
+      <div id="simpanStatus"></div>
+    </div>
 
-      <!-- Status bar -->
-      <div class="cam-status-bar">
-        <span id="camStatusTxt">Memulai kamera...</span>
-        <div class="cam-btns">
-          <button class="cbtn" id="btnPause" onclick="pauseScanner()" disabled>
-            <i class="fas fa-pause"></i> Pause
-          </button>
-          <button class="cbtn gold" id="btnResume" onclick="startCamera()" style="display:none;">
-            <i class="fas fa-play"></i> Lanjut
-          </button>
-        </div>
+    <!-- Tab 2 -->
+    <div class="tab-pane" id="tabPane2" style="display:none;">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Ketik NIA jemaat lalu tekan Cari atau Enter.</p>
+      <div class="manual-row">
+        <input type="text" id="manualNia" placeholder="Ketik NIA..." onkeydown="if(event.key==='Enter')cariManual()">
+        <button class="mbtn" onclick="cariManual()"><i class="fas fa-search"></i></button>
       </div>
     </div>
 
-    <!-- Bottom panel -->
-    <div class="bottom-panel">
-      <div class="tab-bar">
-        <button class="tab-btn active" id="tab1" onclick="switchTab(1)">
-          <i class="fas fa-list"></i> Hadir (<span id="counterInTab">0</span>)
-        </button>
-        <button class="tab-btn" id="tab2" onclick="switchTab(2)">
-          <i class="fas fa-keyboard"></i> Manual
-        </button>
-        <button class="tab-btn" id="tab3" onclick="switchTab(3)">
-          <i class="fas fa-image"></i> Foto QR
-        </button>
+    <!-- Tab 3 -->
+    <div class="tab-pane" id="tabPane3" style="display:none;">
+      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Foto kartu anggota, QR Code dibaca otomatis.</p>
+      <div class="upload-box" onclick="document.getElementById('fotoQR').click()">
+        <i class="fas fa-camera-retro"></i>
+        <p>Ketuk untuk ambil foto / pilih gambar</p>
+        <input type="file" id="fotoQR" accept="image/*" capture="environment" onchange="scanDariFoto(this)">
       </div>
-
-      <!-- Tab 1: Daftar hadir -->
-      <div class="tab-content" id="tabContent1">
-        <div class="counter-row">
-          <div class="counter-num" id="counterNum">0</div>
-          <div class="counter-lbl">jemaat hadir</div>
-        </div>
-        <input type="text" class="search-box" id="searchBox" placeholder="Cari nama atau NIA..." oninput="renderList()">
-        <div id="hadirList"></div>
-        <div class="toolbar">
-          <button class="tbtn gold" id="btnSimpan" onclick="simpanKeSheet()">
-            <i class="fas fa-save"></i> Simpan
-          </button>
-          <button class="tbtn" onclick="exportCSV()">
-            <i class="fas fa-file-csv"></i> CSV
-          </button>
-          <button class="tbtn" onclick="exportTXT()">
-            <i class="fas fa-file-alt"></i> TXT
-          </button>
-          <button class="tbtn danger" onclick="clearAll()">
-            <i class="fas fa-trash"></i> Hapus
-          </button>
-        </div>
-        <div id="simpanStatus"></div>
-      </div>
-
-      <!-- Tab 2: Input manual -->
-      <div class="tab-content" id="tabContent2" style="display:none;">
-        <div class="manual-wrap">
-          <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Ketik NIA jemaat lalu tekan Cari atau Enter.</p>
-          <div class="manual-row">
-            <input type="text" id="manualNia" placeholder="Ketik NIA..." onkeydown="if(event.key==='Enter')cariManual()">
-            <button class="mbtn" onclick="cariManual()"><i class="fas fa-search"></i></button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Tab 3: Upload foto QR -->
-      <div class="tab-content" id="tabContent3" style="display:none;">
-        <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Foto kartu anggota lalu pilih di sini. QR Code akan dibaca otomatis.</p>
-        <div class="upload-fallback" onclick="document.getElementById('fotoQR').click()">
-          <i class="fas fa-camera-retro"></i>
-          <p>Ambil foto / pilih gambar QR Code</p>
-          <input type="file" id="fotoQR" accept="image/*" capture="environment" onchange="scanDariFoto(this)">
-        </div>
-        <canvas id="uploadCanvas" style="width:100%;border-radius:8px;display:none;margin-top:10px;"></canvas>
-      </div>
-
+      <canvas id="uploadPreview"></canvas>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
-//  KONFIGURASI — GANTI URL INI DENGAN URL APPS SCRIPT ANDA
-// ══════════════════════════════════════════════
+// ── KONFIGURASI ──────────────────────────────
+// Ganti URL di bawah dengan URL .exec Apps Script Anda
 const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/GANTI_DENGAN_URL_EXEC_ANDA/exec';
 
-// ══════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════
-let daftarHadir = [];
-let sesiInfo = {};
-let stream = null;
-let scanLoop = null;
-let scanning = false;
-let lastScan = 0;
-let toastTimer = null;
+// ── STATE ────────────────────────────────────
+let daftarHadir = [], sesiInfo = {}, camStream = null;
+let scanLoop = null, isScanning = false, lastScan = 0, toastTimer = null;
 
-// ══════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════
+// ── INIT ─────────────────────────────────────
 document.getElementById('tglIbadah').value = new Date().toISOString().slice(0,10);
-renderList();
 
-// ══════════════════════════════════════════════
-//  SESI
-// ══════════════════════════════════════════════
+// ── SESI ─────────────────────────────────────
 function mulaiSesi() {
+  const tgl = document.getElementById('tglIbadah').value;
+  if (!tgl) { alert('Isi tanggal ibadah!'); return; }
   sesiInfo = {
     jenis  : document.getElementById('jenisIbadah').value,
-    tgl    : document.getElementById('tglIbadah').value,
-    petugas: document.getElementById('petugas').value || 'Petugas',
-    appsUrl: APPS_SCRIPT_URL,
-    mulai  : new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})
+    tgl, petugas: document.getElementById('petugas').value.trim() || 'Petugas',
+    mulai  : jam()
   };
-  if (!sesiInfo.tgl) return alert('Isi tanggal ibadah!');
-
   document.getElementById('hJenis').textContent = sesiInfo.jenis;
-  document.getElementById('hTgl').textContent   = formatTgl(sesiInfo.tgl) + ' · Petugas: ' + sesiInfo.petugas;
-
+  document.getElementById('hTgl').textContent   = formatTgl(tgl) + ' · ' + sesiInfo.petugas;
   document.getElementById('setupScreen').style.display = 'none';
   document.getElementById('scanScreen').style.display  = 'flex';
-
   startCamera();
 }
 
 function akhiriSesi() {
-  if (daftarHadir.length > 0 && !confirm('Akhiri sesi? Pastikan data sudah disimpan.')) return;
-  stopCamera();
-  document.getElementById('setupScreen').style.display = 'flex';
+  if (daftarHadir.length && !confirm('Akhiri sesi? Pastikan data sudah disimpan.')) return;
+  stopCamera(); daftarHadir = []; renderList();
   document.getElementById('scanScreen').style.display  = 'none';
-  daftarHadir = [];
-  renderList();
+  document.getElementById('setupScreen').style.display = 'flex';
 }
 
-// ══════════════════════════════════════════════
-//  KAMERA
-// ══════════════════════════════════════════════
+// ── KAMERA ───────────────────────────────────
 async function startCamera() {
   document.getElementById('camError').style.display  = 'none';
   document.getElementById('camStatusTxt').textContent = 'Memulai kamera...';
-  document.getElementById('btnPause').disabled = true;
-  document.getElementById('btnResume').style.display = 'none';
-  document.getElementById('btnPause').style.display  = 'inline-block';
-
-  const constraints = [
-    { video:{ facingMode:{exact:'environment'}, width:{ideal:1280}, height:{ideal:720} } },
-    { video:{ facingMode:'environment' } },
-    { video:{ width:{ideal:1280} } },
-    { video: true }
+  document.getElementById('camStatusTxt').style.color = 'var(--muted)';
+  document.getElementById('btnPause').style.display   = 'inline-block';
+  document.getElementById('btnResume').style.display  = 'none';
+  document.getElementById('scanLine').style.display   = 'none';
+  const tries = [
+    {video:{facingMode:{exact:'environment'},width:{ideal:1280}}},
+    {video:{facingMode:'environment'}},
+    {video:{width:{ideal:1280}}},
+    {video:true}
   ];
-
-  for (const c of constraints) {
+  for (const c of tries) {
     try {
-      stream = await navigator.mediaDevices.getUserMedia(c);
-      const video = document.getElementById('camVideo');
-      video.srcObject = stream;
-      await video.play();
-      scanning = true;
+      camStream = await navigator.mediaDevices.getUserMedia(c);
+      const v = document.getElementById('camVideo');
+      v.srcObject = camStream; await v.play();
+      isScanning = true;
+      document.getElementById('scanLine').style.display   = 'block';
       document.getElementById('camStatusTxt').textContent = '● Aktif — arahkan ke QR Code';
       document.getElementById('camStatusTxt').style.color = 'var(--green)';
-      document.getElementById('btnPause').disabled = false;
-      document.getElementById('scanLine').style.display = 'block';
-      loopScan();
-      return;
+      loopScan(); return;
     } catch(e) {
       if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-        showCamError('Izin kamera ditolak.<br><br>Klik ikon <b>kunci/gembok</b> di address bar browser → izinkan kamera → refresh halaman ini.');
+        showCamError('Izin kamera ditolak.<br><br>Klik ikon <b>kunci</b> di address bar → izinkan Kamera → refresh halaman.<br><br>Atau gunakan tab <b>Foto QR</b> sebagai alternatif.');
         return;
       }
-      // coba constraint berikutnya
     }
   }
   showCamError('Kamera tidak ditemukan atau tidak didukung browser ini.');
 }
 
 function stopCamera() {
-  scanning = false;
-  if (scanLoop) { cancelAnimationFrame(scanLoop); scanLoop = null; }
-  if (stream)   { stream.getTracks().forEach(t => t.stop()); stream = null; }
+  isScanning = false;
+  if (scanLoop)  { cancelAnimationFrame(scanLoop); scanLoop = null; }
+  if (camStream) { camStream.getTracks().forEach(t=>t.stop()); camStream = null; }
   const v = document.getElementById('camVideo');
   if (v) v.srcObject = null;
   document.getElementById('scanLine').style.display = 'none';
 }
 
 function pauseScanner() {
-  scanning = false;
+  isScanning = false;
   if (scanLoop) { cancelAnimationFrame(scanLoop); scanLoop = null; }
   document.getElementById('camStatusTxt').textContent = 'Dijeda';
   document.getElementById('camStatusTxt').style.color = 'var(--muted)';
-  document.getElementById('btnPause').style.display  = 'none';
-  document.getElementById('btnResume').style.display = 'inline-block';
-  document.getElementById('scanLine').style.display  = 'none';
+  document.getElementById('btnPause').style.display   = 'none';
+  document.getElementById('btnResume').style.display  = 'inline-block';
+  document.getElementById('scanLine').style.display   = 'none';
 }
 
-function retryCamera() {
-  document.getElementById('camError').style.display = 'none';
-  startCamera();
-}
+function retryCamera() { document.getElementById('camError').style.display='none'; startCamera(); }
 
 function showCamError(msg) {
   document.getElementById('errMsg').innerHTML = msg;
-  document.getElementById('camError').style.display  = 'flex';
-  document.getElementById('camStatusTxt').textContent = 'Kamera gagal';
+  document.getElementById('camError').style.display   = 'flex';
+  document.getElementById('camStatusTxt').textContent = 'Gagal';
   document.getElementById('camStatusTxt').style.color = 'var(--red)';
 }
 
-// ══════════════════════════════════════════════
-//  SCAN LOOP (jsQR)
-// ══════════════════════════════════════════════
+// ── SCAN LOOP ────────────────────────────────
 function loopScan() {
-  if (!scanning) return;
-  const video  = document.getElementById('camVideo');
-  const canvas = document.getElementById('camCanvas');
-  const ctx    = canvas.getContext('2d');
-
-  if (video.readyState === video.HAVE_ENOUGH_DATA) {
-    canvas.width  = video.videoWidth;
-    canvas.height = video.videoHeight;
-    ctx.drawImage(video, 0, 0);
-    const img  = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const code = jsQR(img.data, img.width, img.height, { inversionAttempts:'dontInvert' });
-    if (code) {
-      const now = Date.now();
-      if (now - lastScan > 2500) { lastScan = now; prosesQR(code.data); }
-    }
+  if (!isScanning) return;
+  const v = document.getElementById('camVideo');
+  const c = document.getElementById('camCanvas');
+  const x = c.getContext('2d');
+  if (v.readyState === v.HAVE_ENOUGH_DATA) {
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    x.drawImage(v,0,0);
+    const d = x.getImageData(0,0,c.width,c.height);
+    const q = jsQR(d.data,d.width,d.height,{inversionAttempts:'dontInvert'});
+    if (q) { const n=Date.now(); if(n-lastScan>2500){lastScan=n;prosesQR(q.data);} }
   }
   scanLoop = requestAnimationFrame(loopScan);
 }
 
-// ══════════════════════════════════════════════
-//  PROSES QR
-// ══════════════════════════════════════════════
+// ── PROSES QR ────────────────────────────────
 function prosesQR(raw) {
-  let nia = '', nama = '', wilayah = '';
+  let nia='', nama='', wilayah='';
   try {
     if (raw.includes('|')) {
-      raw.split('|').forEach(p => {
-        const [k, ...v] = p.split(':');
-        const val = v.join(':').trim();
-        if (k === 'NIA')     nia     = val;
-        else if (k === 'NAMA')    nama    = val;
-        else if (k === 'WILAYAH') wilayah = val;
+      raw.split('|').forEach(p=>{
+        const [k,...v]=p.split(':'); const val=v.join(':').trim();
+        if(k==='NIA')nia=val; else if(k==='NAMA')nama=val; else if(k==='WILAYAH')wilayah=val;
       });
-    } else { nia = raw.trim(); nama = '(tidak diketahui)'; wilayah = '-'; }
-  } catch(e) { showToast('err','','Format QR tidak valid',''); playBeep('err'); return; }
-
-  if (!nia) { showToast('err','','QR tidak valid',''); playBeep('err'); return; }
-
-  const dup = daftarHadir.find(x => x.nia === nia);
-  if (dup) { showToast('dup', nia, nama||dup.nama, (wilayah||dup.wilayah)+' · Sudah scan: '+dup.waktu); playBeep('dup'); return; }
-
-  const waktu = jamSekarang();
-  daftarHadir.unshift({ nia, nama, wilayah, waktu });
-  renderList();
-  showToast('ok', nia, nama, wilayah);
-  playBeep('ok');
+    } else { nia=raw.trim(); nama='-'; wilayah='-'; }
+  } catch(e){ toast('err','','Format QR tidak valid',''); beep('err'); return; }
+  if (!nia){ toast('err','','QR tidak valid',''); beep('err'); return; }
+  const dup = daftarHadir.find(x=>x.nia===nia);
+  if (dup){ toast('dup',nia,nama||dup.nama,(wilayah||dup.wilayah)+' · Sudah scan: '+dup.waktu); beep('dup'); return; }
+  daftarHadir.unshift({nia,nama,wilayah,waktu:jam()});
+  renderList(); toast('ok',nia,nama,wilayah); beep('ok');
 }
 
-// ══════════════════════════════════════════════
-//  SCAN DARI FOTO
-// ══════════════════════════════════════════════
+// ── FOTO QR ──────────────────────────────────
 function scanDariFoto(input) {
-  if (!input.files || !input.files[0]) return;
-  const fr = new FileReader();
-  fr.onload = e => {
-    const img = new Image();
-    img.onload = () => {
-      const c   = document.getElementById('uploadCanvas');
-      c.style.display = 'block';
-      c.width  = img.width; c.height = img.height;
-      const ctx = c.getContext('2d');
-      ctx.drawImage(img, 0, 0);
-      const data = ctx.getImageData(0, 0, c.width, c.height);
-      const code = jsQR(data.data, data.width, data.height, { inversionAttempts:'attemptBoth' });
-      if (code) { prosesQR(code.data); switchTab(1); }
-      else      { alert('QR Code tidak terbaca. Coba foto lebih dekat dan pastikan QR Code telihat jelas.'); }
-      input.value = '';
+  if (!input.files||!input.files[0]) return;
+  const fr=new FileReader();
+  fr.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{
+      const c=document.getElementById('uploadPreview');
+      c.style.display='block'; c.width=img.width; c.height=img.height;
+      const x=c.getContext('2d'); x.drawImage(img,0,0);
+      const d=x.getImageData(0,0,c.width,c.height);
+      const q=jsQR(d.data,d.width,d.height,{inversionAttempts:'attemptBoth'});
+      if(q){prosesQR(q.data);switchTab(1);}
+      else  alert('QR Code tidak terbaca. Coba foto lebih dekat dan pastikan terang.');
+      input.value='';
     };
-    img.src = e.target.result;
+    img.src=e.target.result;
   };
   fr.readAsDataURL(input.files[0]);
 }
 
-// ══════════════════════════════════════════════
-//  INPUT MANUAL
-// ══════════════════════════════════════════════
+// ── MANUAL ───────────────────────────────────
 function cariManual() {
-  const v = document.getElementById('manualNia').value.trim();
-  if (!v) return;
-  const dup = daftarHadir.find(x => x.nia === v);
-  if (dup) { showToast('dup', v, dup.nama, dup.wilayah + ' · Sudah scan: ' + dup.waktu); playBeep('dup'); }
-  else {
-    const waktu = jamSekarang();
-    daftarHadir.unshift({ nia: v, nama: '(Input manual)', wilayah: '-', waktu });
-    renderList(); showToast('ok', v, '(Input manual)', '-'); playBeep('ok');
-  }
-  document.getElementById('manualNia').value = '';
+  const v=document.getElementById('manualNia').value.trim();
+  if(!v) return;
+  const dup=daftarHadir.find(x=>x.nia===v);
+  if(dup){toast('dup',v,dup.nama,dup.wilayah+' · Sudah: '+dup.waktu);beep('dup');}
+  else   {daftarHadir.unshift({nia:v,nama:'(Manual)',wilayah:'-',waktu:jam()});renderList();toast('ok',v,'(Manual)','-');beep('ok');}
+  document.getElementById('manualNia').value='';
   switchTab(1);
 }
 
-// ══════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════
-function showToast(type, nia, nama, wil) {
-  const t = document.getElementById('resultToast');
-  const labels = { ok:'✓ Kehadiran Tercatat', dup:'⚠ Sudah Tercatat', err:'✗ Gagal Membaca' };
-  t.className = 'show ' + type;
-  document.getElementById('toastLabel').className = 'toast-label ' + type;
-  document.getElementById('toastLabel').textContent = labels[type];
-  document.getElementById('toastNia').textContent  = nia;
-  document.getElementById('toastNama').textContent = nama;
-  document.getElementById('toastWil').textContent  = wil;
+// ── TOAST ─────────────────────────────────────
+function toast(type,nia,nama,wil) {
+  const lb={ok:'✓ Kehadiran Tercatat',dup:'⚠ Sudah Tercatat',err:'✗ Gagal Membaca'};
+  const t=document.getElementById('resultToast');
+  t.className='show '+type;
+  document.getElementById('tLabel').className='t-label '+type;
+  document.getElementById('tLabel').textContent=lb[type];
+  document.getElementById('tNia').textContent=nia;
+  document.getElementById('tNama').textContent=nama;
+  document.getElementById('tWil').textContent=wil;
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = ''; }, 2800);
+  toastTimer=setTimeout(()=>{t.className='';},2800);
 }
 
-// ══════════════════════════════════════════════
-//  RENDER LIST
-// ══════════════════════════════════════════════
+// ── RENDER LIST ──────────────────────────────
 function renderList() {
-  const q  = (document.getElementById('searchBox')?.value || '').toLowerCase();
-  const fl = daftarHadir.filter(x =>
-    x.nia.toLowerCase().includes(q) || x.nama.toLowerCase().includes(q) || x.wilayah.toLowerCase().includes(q));
-  document.getElementById('counterNum').textContent    = daftarHadir.length;
-  document.getElementById('counterInTab').textContent  = daftarHadir.length;
-  const el = document.getElementById('hadirList');
-  if (!fl.length) {
-    el.innerHTML = `<div class="empty-state"><i class="fas fa-users"></i>${daftarHadir.length ? 'Tidak ditemukan' : 'Belum ada kehadiran'}</div>`;
-    return;
-  }
-  el.innerHTML = fl.map(x => {
-    const ini = x.nama.split(' ').slice(0,2).map(w => w[0]||'').join('').toUpperCase();
-    const idx = daftarHadir.indexOf(x) + 1;
+  const q=(document.getElementById('searchBox')?.value||'').toLowerCase();
+  const fl=daftarHadir.filter(x=>x.nia.toLowerCase().includes(q)||x.nama.toLowerCase().includes(q)||x.wilayah.toLowerCase().includes(q));
+  document.getElementById('counterNum').textContent=daftarHadir.length;
+  document.getElementById('counterInTab').textContent=daftarHadir.length;
+  const el=document.getElementById('hadirList');
+  if(!fl.length){el.innerHTML=`<div class="empty-state"><i class="fas fa-users"></i>${daftarHadir.length?'Tidak ditemukan':'Belum ada kehadiran'}</div>`;return;}
+  el.innerHTML=fl.map(x=>{
+    const ini=x.nama.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
     return `<div class="hadir-item">
-      <div class="hadir-no">${idx}</div>
-      <div class="hadir-av">${ini}</div>
-      <div class="hadir-info">
-        <div class="hadir-nama">${x.nama}</div>
-        <div class="hadir-sub">NIA: ${x.nia} · ${x.wilayah}</div>
-      </div>
-      <div class="hadir-time">${x.waktu}</div>
-      <button class="hadir-del" onclick="hapusItem('${x.nia}')"><i class="fas fa-times"></i></button>
+      <div class="hi-no">${daftarHadir.indexOf(x)+1}</div>
+      <div class="hi-av">${ini}</div>
+      <div class="hi-info"><div class="hi-nama">${x.nama}</div><div class="hi-sub">NIA: ${x.nia} · ${x.wilayah}</div></div>
+      <div class="hi-time">${x.waktu}</div>
+      <button class="hi-del" onclick="hapusItem('${x.nia}')"><i class="fas fa-times"></i></button>
     </div>`;
   }).join('');
 }
 
 function hapusItem(nia) {
-  if (!confirm('Hapus kehadiran NIA ' + nia + '?')) return;
-  daftarHadir = daftarHadir.filter(x => x.nia !== nia);
-  renderList();
+  if(!confirm('Hapus kehadiran NIA '+nia+'?')) return;
+  daftarHadir=daftarHadir.filter(x=>x.nia!==nia); renderList();
 }
 
 function clearAll() {
-  if (!daftarHadir.length) return;
-  if (!confirm('Hapus semua ' + daftarHadir.length + ' data?')) return;
-  daftarHadir = []; renderList();
+  if(!daftarHadir.length) return;
+  if(!confirm('Hapus semua '+daftarHadir.length+' data kehadiran?')) return;
+  daftarHadir=[]; renderList();
 }
 
-// ══════════════════════════════════════════════
-//  SIMPAN KE APPS SCRIPT (fetch POST)
-// ══════════════════════════════════════════════
+// ── SIMPAN KE SHEET ──────────────────────────
 async function simpanKeSheet() {
-  if (!daftarHadir.length) return alert('Belum ada data.');
-  if (!sesiInfo.appsUrl || sesiInfo.appsUrl.includes('GANTI_DENGAN')) {
-    return alert('URL Apps Script belum diisi di file index.html.\nBuka file index.html → cari APPS_SCRIPT_URL → isi dengan URL .exec Anda.\n\nSementara gunakan tombol CSV untuk menyimpan data.');
+  if(!daftarHadir.length){alert('Belum ada data kehadiran.');return;}
+  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('GANTI_DENGAN')){
+    alert('URL Apps Script belum diisi.\n\nBuka file index.html → cari APPS_SCRIPT_URL → ganti dengan URL .exec Anda.\n\nGunakan Download CSV untuk menyimpan data sekarang.');
+    return;
   }
-
-  const btn = document.getElementById('btnSimpan');
-  const statusEl = document.getElementById('simpanStatus');
-  btn.disabled = true; btn.textContent = '⏳ Menyimpan...';
-
+  const s=document.getElementById('simpanStatus');
+  s.style.cssText='display:block;background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+  s.textContent='⏳ Menyimpan ke Google Sheets...';
   try {
-    const res = await fetch(sesiInfo.appsUrl, {
-      method : 'POST',
-      headers: { 'Content-Type':'application/json' },
-      body   : JSON.stringify({
-        jenis  : sesiInfo.jenis,
-        tanggal: sesiInfo.tgl,
-        petugas: sesiInfo.petugas,
-        daftar : daftarHadir
-      })
-    });
-    const txt = await res.text();
-    if (txt.startsWith('OK')) {
-      statusEl.style.cssText = 'display:block;background:rgba(34,197,94,.12);color:#22c55e;border:1px solid rgba(34,197,94,.3);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-top:10px;';
-      statusEl.textContent   = '✓ Berhasil disimpan ' + daftarHadir.length + ' data ke Google Sheets';
-      setTimeout(() => statusEl.style.display = 'none', 5000);
-    } else {
-      throw new Error(txt);
-    }
-  } catch(e) {
-    statusEl.style.cssText = 'display:block;background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.3);padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-top:10px;';
-    statusEl.textContent   = '✗ Gagal: ' + e.message;
-  } finally {
-    btn.disabled = false; btn.innerHTML = '<i class="fas fa-save"></i> Simpan';
+    const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jenis:sesiInfo.jenis,tanggal:sesiInfo.tgl,petugas:sesiInfo.petugas,daftar:daftarHadir})});
+    const t=await r.text();
+    if(t.startsWith('OK')){
+      s.style.cssText='display:block;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+      s.textContent='✓ Berhasil disimpan '+daftarHadir.length+' data ke Google Sheets!';
+      setTimeout(()=>s.style.display='none',5000);
+    } else throw new Error(t);
+  } catch(e){
+    s.style.cssText='display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+    s.textContent='✗ Gagal: '+e.message;
   }
 }
 
-// ══════════════════════════════════════════════
-//  EXPORT
-// ══════════════════════════════════════════════
+// ── EXPORT ───────────────────────────────────
 function exportCSV() {
-  if (!daftarHadir.length) return alert('Belum ada data.');
-  const bom = '\uFEFF';
-  const header = 'No,NIA,Nama,Wilayah,Waktu Hadir,Tanggal,Jenis Ibadah,Petugas\n';
-  const rows = daftarHadir.map((x,i) =>
-    `${i+1},"${x.nia}","${x.nama}","${x.wilayah}","${x.waktu}","${sesiInfo.tgl}","${sesiInfo.jenis}","${sesiInfo.petugas}"`
-  ).join('\n');
-  const blob = new Blob([bom + header + rows], { type:'text/csv;charset=utf-8;' });
-  dl(URL.createObjectURL(blob), `Kehadiran_GKI_${sesiInfo.tgl}.csv`);
+  if(!daftarHadir.length){alert('Belum ada data kehadiran.');return;}
+  const bom='\uFEFF';
+  const h='No,NIA,Nama,Wilayah,Waktu Hadir,Tanggal,Jenis Ibadah,Petugas\n';
+  const r=daftarHadir.map((x,i)=>`${i+1},"${x.nia}","${x.nama}","${x.wilayah}","${x.waktu}","${sesiInfo.tgl}","${sesiInfo.jenis}","${sesiInfo.petugas}"`).join('\n');
+  unduh(new Blob([bom+h+r],{type:'text/csv;charset=utf-8;'}),`Kehadiran_GKI_${sesiInfo.tgl}.csv`);
 }
 
 function exportTXT() {
-  if (!daftarHadir.length) return alert('Belum ada data.');
-  const line = '─'.repeat(48);
-  const txt  = [
-    '╔══════════════════════════════════════════════╗',
-    '║   REKAP KEHADIRAN IBADAH GKI TEGALREJO      ║',
-    '╚══════════════════════════════════════════════╝',
-    '', 'Ibadah  : ' + sesiInfo.jenis,
-    'Tanggal : ' + formatTgl(sesiInfo.tgl),
-    'Petugas : ' + sesiInfo.petugas,
-    'Dicetak : ' + new Date().toLocaleString('id-ID'),
-    '', line,
-    'No'.padEnd(4) + 'NIA'.padEnd(12) + 'Nama'.padEnd(26) + 'Waktu',
-    line,
-    ...daftarHadir.map((x,i) =>
-      String(i+1).padEnd(4) + String(x.nia).padEnd(12) + String(x.nama).slice(0,25).padEnd(26) + x.waktu
-    ),
-    line, '',
-    'TOTAL HADIR: ' + daftarHadir.length + ' jemaat',
-    '', 'GKI Tegalrejo Salatiga © ' + new Date().getFullYear()
+  if(!daftarHadir.length){alert('Belum ada data kehadiran.');return;}
+  const L='─'.repeat(50);
+  const txt=[
+    '╔════════════════════════════════════════════════╗',
+    '║     REKAP KEHADIRAN IBADAH GKI TEGALREJO      ║',
+    '╚════════════════════════════════════════════════╝','',
+    'Ibadah  : '+sesiInfo.jenis,
+    'Tanggal : '+formatTgl(sesiInfo.tgl),
+    'Petugas : '+sesiInfo.petugas,
+    'Dicetak : '+new Date().toLocaleString('id-ID'),
+    '',L,
+    'No'.padEnd(4)+'NIA'.padEnd(13)+'Nama'.padEnd(28)+'Waktu',L,
+    ...daftarHadir.map((x,i)=>String(i+1).padEnd(4)+String(x.nia).padEnd(13)+String(x.nama).slice(0,27).padEnd(28)+x.waktu),
+    L,'','TOTAL HADIR : '+daftarHadir.length+' jemaat','',
+    'GKI Tegalrejo Salatiga © '+new Date().getFullYear()
   ].join('\n');
-  const blob = new Blob([txt], { type:'text/plain;charset=utf-8;' });
-  dl(URL.createObjectURL(blob), `Rekap_GKI_${sesiInfo.tgl}.txt`);
+  unduh(new Blob([txt],{type:'text/plain;charset=utf-8;'}),`Rekap_GKI_${sesiInfo.tgl}.txt`);
 }
 
-function dl(url, name) {
-  const a = document.createElement('a');
-  a.href = url; a.download = name; a.click();
-  URL.revokeObjectURL(url);
+function unduh(blob,nama) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=nama;
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(a.href);
 }
 
-// ══════════════════════════════════════════════
-//  TAB
-// ══════════════════════════════════════════════
+// ── TAB ──────────────────────────────────────
 function switchTab(n) {
-  [1,2,3].forEach(i => {
-    document.getElementById('tab' + i).className      = 'tab-btn' + (i === n ? ' active' : '');
-    document.getElementById('tabContent' + i).style.display = i === n ? 'block' : 'none';
+  [1,2,3].forEach(i=>{
+    document.getElementById('tab'+i).className='tab-btn'+(i===n?' active':'');
+    document.getElementById('tabPane'+i).style.display=i===n?'block':'none';
   });
 }
 
-// ══════════════════════════════════════════════
-//  UTILS
-// ══════════════════════════════════════════════
-function jamSekarang() {
-  return new Date().toLocaleTimeString('id-ID',{ hour:'2-digit', minute:'2-digit', second:'2-digit' });
-}
+// ── UTILS ─────────────────────────────────────
+function jam() { return new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
 function formatTgl(iso) {
-  if (!iso) return '-';
-  const [y,m,d] = iso.split('-');
-  const bl = ['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
-  return d + ' ' + bl[+m] + ' ' + y;
+  if(!iso)return'-'; const[y,m,d]=iso.split('-');
+  const bl=['','Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
+  return d+' '+bl[+m]+' '+y;
 }
-
-function playBeep(type) {
+function beep(type) {
   try {
-    const ctx = new (window.AudioContext||window.webkitAudioContext)();
-    const osc = ctx.createOscillator();
-    const g   = ctx.createGain();
-    osc.connect(g); g.connect(ctx.destination);
-    osc.type = 'sine';
-    const freqs = { ok:[880,1100], dup:[440,440], err:[220,220] };
-    const [f1,f2] = freqs[type] || [440,440];
-    osc.frequency.setValueAtTime(f1, ctx.currentTime);
-    osc.frequency.setValueAtTime(f2, ctx.currentTime + 0.08);
-    g.gain.setValueAtTime(0.25, ctx.currentTime);
-    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.25);
-    osc.start(); osc.stop(ctx.currentTime + 0.25);
-  } catch(e) {}
+    const ctx=new(window.AudioContext||window.webkitAudioContext)();
+    const o=ctx.createOscillator(), g=ctx.createGain();
+    o.connect(g); g.connect(ctx.destination); o.type='sine';
+    const f={ok:[880,1100],dup:[440,440],err:[220,220]}[type]||[440,440];
+    o.frequency.setValueAtTime(f[0],ctx.currentTime);
+    o.frequency.setValueAtTime(f[1],ctx.currentTime+.08);
+    g.gain.setValueAtTime(.2,ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001,ctx.currentTime+.22);
+    o.start(); o.stop(ctx.currentTime+.22);
+  } catch(e){}
 }
 </script>
 </body>
