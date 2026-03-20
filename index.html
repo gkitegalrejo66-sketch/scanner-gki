@@ -558,28 +558,38 @@ function clearAll() {
 }
 
 // ── SIMPAN KE SHEET ──────────────────────────
-async function simpanKeSheet() {
-  if(!daftarHadir.length){alert('Belum ada data kehadiran.');return;}
-  if(!APPS_SCRIPT_URL||APPS_SCRIPT_URL.includes('GANTI_DENGAN')){
-    alert('URL Apps Script belum diisi.\n\nBuka file index.html → cari APPS_SCRIPT_URL → ganti dengan URL .exec Anda.\n\nGunakan Download CSV untuk menyimpan data sekarang.');
-    return;
-  }
-  const s=document.getElementById('simpanStatus');
-  s.style.cssText='display:block;background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
-  s.textContent='⏳ Menyimpan ke Google Sheets...';
-  try {
-    const r=await fetch(APPS_SCRIPT_URL,{method:'POST',headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({jenis:sesiInfo.jenis,tanggal:sesiInfo.tgl,petugas:sesiInfo.petugas,daftar:daftarHadir})});
-    const t=await r.text();
-    if(t.startsWith('OK')){
-      s.style.cssText='display:block;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
-      s.textContent='✓ Berhasil disimpan '+daftarHadir.length+' data ke Google Sheets!';
-      setTimeout(()=>s.style.display='none',5000);
-    } else throw new Error(t);
-  } catch(e){
-    s.style.cssText='display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
-    s.textContent='✗ Gagal: '+e.message;
-  }
+function simpanKeSheet() {
+  if (!daftarHadir.length) { alert('Belum ada data kehadiran.'); return; }
+
+  const s = document.getElementById('simpanStatus');
+  s.style.cssText = 'display:block;background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+  s.textContent = '⏳ Menyimpan ke Google Sheets...';
+
+  // Apps Script tidak support CORS preflight untuk POST JSON
+  // Gunakan FormData / application/x-www-form-urlencoded sebagai workaround
+  const body = new FormData();
+  body.append('payload', JSON.stringify({
+    jenis  : sesiInfo.jenis,
+    tanggal: sesiInfo.tgl,
+    petugas: sesiInfo.petugas,
+    daftar : daftarHadir
+  }));
+
+  fetch(APPS_SCRIPT_URL, { method:'POST', body })
+    .then(r => r.text())
+    .then(t => {
+      if (t.startsWith('OK')) {
+        s.style.cssText = 'display:block;background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+        s.textContent = '✓ Berhasil disimpan ' + daftarHadir.length + ' data ke Google Sheets!';
+        setTimeout(() => s.style.display = 'none', 5000);
+      } else { throw new Error(t); }
+    })
+    .catch(err => {
+      // Fallback: buka URL di tab baru dengan data di-encode (untuk kasus CORS strict)
+      s.style.cssText = 'display:block;background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);padding:9px 12px;border-radius:8px;font-size:12px;font-weight:600;';
+      s.innerHTML = '✗ Gagal kirim otomatis.<br><small>Gunakan <b>Download CSV</b> lalu import manual ke Sheets.</small>';
+      console.error(err);
+    });
 }
 
 // ── EXPORT ───────────────────────────────────
