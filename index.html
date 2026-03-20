@@ -281,10 +281,13 @@
 
     <!-- Tab 2 -->
     <div class="tab-pane" id="tabPane2" style="display:none;">
-      <p style="font-size:12px;color:var(--muted);margin-bottom:12px;">Cari berdasarkan NIA atau Nama jemaat.</p>
+      <div id="dbStatus" style="padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25);">
+        <i class="fas fa-database"></i> Data jemaat belum dimuat — <span style="text-decoration:underline;cursor:pointer;" onclick="muatDatabase()">Muat Sekarang</span>
+      </div>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">Cari berdasarkan NIA atau Nama jemaat.</p>
       <div class="manual-row">
-        <input type="text" id="manualNia" placeholder="Ketik NIA atau nama..." oninput="cariJemaat(this.value)" onkeydown="if(event.key==='Enter')paksaCariBaris()">
-        <button class="mbtn" onclick="paksaCariBaris()"><i class="fas fa-search"></i></button>
+        <input type="text" id="manualNia" placeholder="Ketik NIA atau nama..." oninput="cariLokal(this.value)">
+        <button class="mbtn" onclick="muatDatabase()"><i class="fas fa-sync"></i></button>
       </div>
       <div id="hasilCari" style="margin-top:8px;"></div>
     </div>
@@ -313,6 +316,7 @@ let scanLoop = null, isScanning = false, lastScan = 0, toastTimer = null;
 
 // ── INIT ─────────────────────────────────────
 document.getElementById('tglIbadah').value = new Date().toISOString().slice(0,10);
+initDatabase();
 
 // ── SESI ─────────────────────────────────────
 function mulaiSesi() {
@@ -454,79 +458,90 @@ function scanDariFoto(input) {
   fr.readAsDataURL(input.files[0]);
 }
 
-// ── MANUAL — cari ke spreadsheet (JSONP, bypass CORS) ────────
-let cariTimer = null;
+// ── DATABASE JEMAAT LOKAL (localStorage) ─────
+// Data diambil SEKALI dari Apps Script saat klik "Muat"
+// Setelah itu pencarian offline, tidak perlu internet
 
-function cariJemaat(q) {
-  clearTimeout(cariTimer);
-  const el = document.getElementById('hasilCari');
-  q = q.trim();
-  if (q.length < 2) { el.innerHTML = ''; return; }
-  el.innerHTML = '<div class="cari-loading"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
-  cariTimer = setTimeout(() => fetchCariJSONP(q), 400);
-}
+let dbJemaat = []; // cache di memory
 
-function paksaCariBaris() {
-  const q = document.getElementById('manualNia').value.trim();
-  if (q.length >= 1) fetchCariJSONP(q);
-}
-
-function fetchCariJSONP(q) {
-  const el = document.getElementById('hasilCari');
-  el.innerHTML = '<div class="cari-loading"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
-
-  // Buat nama callback unik
-  const cbName = 'gkiCb_' + Date.now();
-
-  // Timeout jika tidak ada response dalam 8 detik
-  const timeout = setTimeout(() => {
-    if (window[cbName]) {
-      delete window[cbName];
-      el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Waktu habis. Pastikan Apps Script sudah di-deploy ulang.</div>';
+function initDatabase() {
+  try {
+    const raw = localStorage.getItem('gki_db_jemaat');
+    if (raw) {
+      dbJemaat = JSON.parse(raw);
+      setDbStatus('ok', '✓ ' + dbJemaat.length + ' jemaat tersimpan lokal. <span style="text-decoration:underline;cursor:pointer;" onclick="muatDatabase()">Perbarui</span>');
     }
-  }, 8000);
-
-  // Definisikan callback global
-  window[cbName] = function(data) {
-    clearTimeout(timeout);
-    delete window[cbName];
-    // Hapus script tag
-    const oldScript = document.getElementById('jsonp_' + cbName);
-    if (oldScript) oldScript.remove();
-    renderHasilCari(data, el);
-  };
-
-  // Inject script tag — ini yang bypass CORS
-  const script = document.createElement('script');
-  script.id  = 'jsonp_' + cbName;
-  script.src = APPS_SCRIPT_URL
-    + '?action=cari'
-    + '&q=' + encodeURIComponent(q)
-    + '&callback=' + cbName;
-  script.onerror = () => {
-    clearTimeout(timeout);
-    delete window[cbName];
-    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Gagal terhubung ke server. Pastikan Apps Script sudah di-deploy dengan akses <b>Anyone</b>.</div>';
-  };
-  document.head.appendChild(script);
+  } catch(e) { dbJemaat = []; }
 }
 
-function renderHasilCari(data, el) {
-  if (!el) el = document.getElementById('hasilCari');
+async function muatDatabase() {
+  setDbStatus('loading', '<i class="fas fa-spinner fa-spin"></i> Mengunduh data jemaat dari server...');
+  try {
+    // Kirim sebagai GET biasa — Apps Script redirect tapi fetch bisa follow redirect
+    const url = APPS_SCRIPT_URL + '?action=semua';
+    const res  = await fetch(url, { redirect: 'follow' });
+    const text = await res.text();
 
-  // Jika data adalah object error
-  if (!Array.isArray(data)) {
-    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Error: ' + (data.error || JSON.stringify(data)) + '</div>';
+    // Coba parse JSON — bersihkan dulu jika ada wrapper JSONP
+    let data;
+    try {
+      data = JSON.parse(text);
+    } catch(e) {
+      // Mungkin dibungkus callback, coba strip
+      const m = text.match(/\[.*\]/s);
+      if (m) data = JSON.parse(m[0]);
+      else throw new Error('Format respons tidak dikenali: ' + text.substring(0, 100));
+    }
+
+    if (!Array.isArray(data)) throw new Error(data.error || JSON.stringify(data));
+
+    dbJemaat = data;
+    localStorage.setItem('gki_db_jemaat', JSON.stringify(data));
+    setDbStatus('ok', '✓ ' + data.length + ' jemaat berhasil dimuat. <span style="text-decoration:underline;cursor:pointer;" onclick="muatDatabase()">Perbarui</span>');
+
+  } catch(err) {
+    setDbStatus('err', '✗ Gagal: ' + err.message + ' — <span style="text-decoration:underline;cursor:pointer;" onclick="muatDatabase()">Coba Lagi</span>');
+    console.error('muatDatabase error:', err);
+  }
+}
+
+function setDbStatus(type, html) {
+  const el = document.getElementById('dbStatus');
+  if (!el) return;
+  const styles = {
+    loading: 'background:rgba(245,197,24,.1);color:var(--gold);border:1px solid rgba(245,197,24,.25);',
+    ok     : 'background:rgba(34,197,94,.1);color:var(--green);border:1px solid rgba(34,197,94,.25);',
+    err    : 'background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.25);'
+  };
+  el.style.cssText = 'padding:8px 12px;border-radius:8px;font-size:12px;font-weight:600;margin-bottom:12px;' + (styles[type]||styles.loading);
+  el.innerHTML = html;
+}
+
+// Pencarian LOKAL — langsung dari array dbJemaat di memory
+function cariLokal(q) {
+  const el = document.getElementById('hasilCari');
+  q = q.trim().toLowerCase();
+  if (q.length < 1) { el.innerHTML = ''; return; }
+
+  if (!dbJemaat.length) {
+    el.innerHTML = '<div class="cari-empty" style="color:var(--gold);">Data belum dimuat. Klik tombol <b>Muat Sekarang</b> di atas.</div>';
     return;
   }
-  if (!data.length) {
-    el.innerHTML = '<div class="cari-empty"><i class="fas fa-search" style="display:block;font-size:20px;margin-bottom:6px;opacity:.3;"></i>Jemaat tidak ditemukan</div>';
+
+  const hasil = dbJemaat.filter(x =>
+    (x.nia  || '').toLowerCase().includes(q) ||
+    (x.nama || '').toLowerCase().includes(q)
+  ).slice(0, 10);
+
+  if (!hasil.length) {
+    el.innerHTML = '<div class="cari-empty"><i class="fas fa-search" style="display:block;font-size:20px;margin-bottom:6px;opacity:.3;"></i>Tidak ditemukan</div>';
     return;
   }
-  el.innerHTML = data.map(x => {
-    const ini  = x.nama.split(' ').slice(0,2).map(w => w[0]||'').join('').toUpperCase() || '?';
-    const nama = x.nama.replace(/'/g, '&#39;');
-    const wil  = x.wilayah.replace(/'/g, '&#39;');
+
+  el.innerHTML = hasil.map(x => {
+    const ini  = (x.nama||'').split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase() || '?';
+    const nama = (x.nama||'').replace(/'/g,'&#39;');
+    const wil  = (x.wilayah||'').replace(/'/g,'&#39;');
     return `<div class="hasil-item" onclick="pilihJemaat('${x.nia}','${nama}','${wil}')">
       <div class="hasil-av">${ini}</div>
       <div class="hasil-info">
@@ -549,7 +564,7 @@ function pilihJemaat(nia, nama, wilayah) {
     toast('ok', nia, nama, wilayah);
     beep('ok');
   }
-  document.getElementById('manualNia').value  = '';
+  document.getElementById('manualNia').value     = '';
   document.getElementById('hasilCari').innerHTML = '';
   switchTab(1);
 }
