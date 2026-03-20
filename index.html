@@ -454,7 +454,7 @@ function scanDariFoto(input) {
   fr.readAsDataURL(input.files[0]);
 }
 
-// ── MANUAL — cari ke spreadsheet ─────────────
+// ── MANUAL — cari ke spreadsheet (JSONP, bypass CORS) ────────
 let cariTimer = null;
 
 function cariJemaat(q) {
@@ -463,37 +463,79 @@ function cariJemaat(q) {
   q = q.trim();
   if (q.length < 2) { el.innerHTML = ''; return; }
   el.innerHTML = '<div class="cari-loading"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
-  cariTimer = setTimeout(() => fetchCari(q), 400);
+  cariTimer = setTimeout(() => fetchCariJSONP(q), 400);
 }
 
 function paksaCariBaris() {
   const q = document.getElementById('manualNia').value.trim();
-  if (q) fetchCari(q);
+  if (q.length >= 1) fetchCariJSONP(q);
 }
 
-async function fetchCari(q) {
+function fetchCariJSONP(q) {
   const el = document.getElementById('hasilCari');
-  try {
-    const res  = await fetch(APPS_SCRIPT_URL + '?action=cari&q=' + encodeURIComponent(q));
-    const data = await res.json();
-    if (!data.length) {
-      el.innerHTML = '<div class="cari-empty"><i class="fas fa-search" style="display:block;font-size:20px;margin-bottom:6px;opacity:.3;"></i>Jemaat tidak ditemukan</div>';
-      return;
+  el.innerHTML = '<div class="cari-loading"><i class="fas fa-spinner fa-spin"></i> Mencari...</div>';
+
+  // Buat nama callback unik
+  const cbName = 'gkiCb_' + Date.now();
+
+  // Timeout jika tidak ada response dalam 8 detik
+  const timeout = setTimeout(() => {
+    if (window[cbName]) {
+      delete window[cbName];
+      el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Waktu habis. Pastikan Apps Script sudah di-deploy ulang.</div>';
     }
-    el.innerHTML = data.map(x => {
-      const ini = x.nama.split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase()||'?';
-      return `<div class="hasil-item" onclick="pilihJemaat('${x.nia}','${x.nama.replace(/'/g,"\\'")}','${x.wilayah.replace(/'/g,"\\'")}')">
-        <div class="hasil-av">${ini}</div>
-        <div class="hasil-info">
-          <div class="hasil-nama">${x.nama}</div>
-          <div class="hasil-sub">NIA: ${x.nia} &nbsp;·&nbsp; ${x.wilayah}</div>
-        </div>
-        <div class="hasil-plus"><i class="fas fa-plus-circle"></i></div>
-      </div>`;
-    }).join('');
-  } catch(e) {
-    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Gagal mengambil data. Cek koneksi internet.</div>';
+  }, 8000);
+
+  // Definisikan callback global
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    // Hapus script tag
+    const oldScript = document.getElementById('jsonp_' + cbName);
+    if (oldScript) oldScript.remove();
+    renderHasilCari(data, el);
+  };
+
+  // Inject script tag — ini yang bypass CORS
+  const script = document.createElement('script');
+  script.id  = 'jsonp_' + cbName;
+  script.src = APPS_SCRIPT_URL
+    + '?action=cari'
+    + '&q=' + encodeURIComponent(q)
+    + '&callback=' + cbName;
+  script.onerror = () => {
+    clearTimeout(timeout);
+    delete window[cbName];
+    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Gagal terhubung ke server. Pastikan Apps Script sudah di-deploy dengan akses <b>Anyone</b>.</div>';
+  };
+  document.head.appendChild(script);
+}
+
+function renderHasilCari(data, el) {
+  if (!el) el = document.getElementById('hasilCari');
+
+  // Jika data adalah object error
+  if (!Array.isArray(data)) {
+    el.innerHTML = '<div class="cari-empty" style="color:var(--red);">Error: ' + (data.error || JSON.stringify(data)) + '</div>';
+    return;
   }
+  if (!data.length) {
+    el.innerHTML = '<div class="cari-empty"><i class="fas fa-search" style="display:block;font-size:20px;margin-bottom:6px;opacity:.3;"></i>Jemaat tidak ditemukan</div>';
+    return;
+  }
+  el.innerHTML = data.map(x => {
+    const ini  = x.nama.split(' ').slice(0,2).map(w => w[0]||'').join('').toUpperCase() || '?';
+    const nama = x.nama.replace(/'/g, '&#39;');
+    const wil  = x.wilayah.replace(/'/g, '&#39;');
+    return `<div class="hasil-item" onclick="pilihJemaat('${x.nia}','${nama}','${wil}')">
+      <div class="hasil-av">${ini}</div>
+      <div class="hasil-info">
+        <div class="hasil-nama">${x.nama}</div>
+        <div class="hasil-sub">NIA: ${x.nia} &nbsp;·&nbsp; ${x.wilayah}</div>
+      </div>
+      <div class="hasil-plus"><i class="fas fa-plus-circle"></i></div>
+    </div>`;
+  }).join('');
 }
 
 function pilihJemaat(nia, nama, wilayah) {
@@ -507,7 +549,7 @@ function pilihJemaat(nia, nama, wilayah) {
     toast('ok', nia, nama, wilayah);
     beep('ok');
   }
-  document.getElementById('manualNia').value = '';
+  document.getElementById('manualNia').value  = '';
   document.getElementById('hasilCari').innerHTML = '';
   switchTab(1);
 }
