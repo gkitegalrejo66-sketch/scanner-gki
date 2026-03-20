@@ -248,12 +248,17 @@
     <div class="field">
       <label>Jenis Ibadah</label>
       <select id="jenisIbadah">
-        <option>Ibadah Minggu Pagi (06.00)</option>
-        <option>Ibadah Minggu Pagi (08.30)</option>
-        <option>Ibadah Minggu Siang (11.00)</option>
-        <option>Ibadah Pemuda</option>
+        <option>Ibadah Minggu Pagi (07.00)</option>
+        <option>Ibadah Anak</option>
         <option>Ibadah Remaja</option>
-        <option>Persekutuan Wilayah</option>
+        <option>Ibadah Pemuda</option>
+        <option>Ibadah Dewasa</option>
+        <option>Ibadah Usia Lanjut</option>
+        <option>Persekutuan Wilayah 1</option>
+        <option>Persekutuan Wilayah 2</option>
+        <option>Persekutuan Wilayah 3</option>
+        <option>Persekutuan Wilayah 4</option>
+        <option>Persekutuan Wilayah 5</option>
         <option>Lainnya</option>
       </select>
     </div>
@@ -265,7 +270,11 @@
       <label>Nama Petugas</label>
       <input type="text" id="petugas" placeholder="Nama petugas absensi...">
     </div>
-
+    <div class="field">
+      <label>URL Apps Script (untuk simpan data)</label>
+      <input type="text" id="appsUrl" placeholder="https://script.google.com/macros/s/.../exec">
+      <p style="font-size:11px;color:var(--muted);margin-top:5px;">Kosongkan jika hanya export CSV</p>
+    </div>
 
     <button class="btn-start" onclick="mulaiSesi()">
       <i class="fas fa-qrcode"></i> Mulai Sesi &amp; Buka Kamera
@@ -405,11 +414,6 @@
 
 <script>
 // ══════════════════════════════════════════════
-//  KONFIGURASI — GANTI URL INI DENGAN URL APPS SCRIPT ANDA
-// ══════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzQX7WIhF0KtJLhlsUTnNKoGqTwoHKiXF3OdGQ5B2rpuO1MrIVSI_jyBn-l0EEi492R/exec';
-
-// ══════════════════════════════════════════════
 //  STATE
 // ══════════════════════════════════════════════
 let daftarHadir = [];
@@ -434,7 +438,7 @@ function mulaiSesi() {
     jenis  : document.getElementById('jenisIbadah').value,
     tgl    : document.getElementById('tglIbadah').value,
     petugas: document.getElementById('petugas').value || 'Petugas',
-    appsUrl: APPS_SCRIPT_URL,
+    appsUrl: document.getElementById('appsUrl').value.trim(),
     mulai  : new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})
   };
   if (!sesiInfo.tgl) return alert('Isi tanggal ibadah!');
@@ -686,9 +690,7 @@ function clearAll() {
 // ══════════════════════════════════════════════
 async function simpanKeSheet() {
   if (!daftarHadir.length) return alert('Belum ada data.');
-  if (!sesiInfo.appsUrl || sesiInfo.appsUrl.includes('GANTI_DENGAN')) {
-    return alert('URL Apps Script belum diisi di file index.html.\nBuka file index.html → cari APPS_SCRIPT_URL → isi dengan URL .exec Anda.\n\nSementara gunakan tombol CSV untuk menyimpan data.');
-  }
+  if (!sesiInfo.appsUrl)   return alert('URL Apps Script belum diisi di pengaturan sesi.\nGunakan tombol CSV untuk menyimpan data.');
 
   const btn = document.getElementById('btnSimpan');
   const statusEl = document.getElementById('simpanStatus');
